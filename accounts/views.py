@@ -1,0 +1,205 @@
+import random
+from django.utils import timezone
+from django.conf import settings
+
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+
+from openai import OpenAI
+
+from .models import OTP
+from .serializers import SendOTPSerializer, VerifyOTPSerializer
+
+
+# ======================================
+# 🔥 OpenAI Client
+# ======================================
+client = OpenAI(api_key=settings.OPENAI_API_KEY)
+
+
+# ======================================
+# 📱 SEND OTP
+# ======================================
+class SendOTPView(APIView):
+
+    def post(self, request):
+        serializer = SendOTPSerializer(data=request.data)
+
+        if not serializer.is_valid():
+            return Response(
+                serializer.errors,
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        phone = serializer.validated_data["phone"]
+
+        otp = str(random.randint(100000, 999999))
+
+        OTP.objects.update_or_create(
+            phone=phone,
+            defaults={
+                "otp": otp,
+                "created_at": timezone.now()
+            }
+        )
+
+        print(f"OTP for {phone}: {otp}")
+
+        return Response(
+            {"message": "OTP sent successfully"},
+            status=status.HTTP_200_OK
+        )
+
+
+# ======================================
+# 🔐 VERIFY OTP
+# ======================================
+class VerifyOTPView(APIView):
+
+    def post(self, request):
+        serializer = VerifyOTPSerializer(data=request.data)
+
+        if not serializer.is_valid():
+            return Response(
+                serializer.errors,
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        phone = serializer.validated_data["phone"]
+        otp = serializer.validated_data["otp"]
+
+        try:
+            record = OTP.objects.get(phone=phone)
+
+        except OTP.DoesNotExist:
+            return Response(
+                {"error": "OTP not found"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        if record.is_expired():
+            record.delete()
+            return Response(
+                {"error": "OTP expired"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        if record.otp != otp:
+            return Response(
+                {"error": "Invalid OTP"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        record.delete()
+
+        return Response(
+            {
+                "message": "Login successful",
+                "token": "dummy_token_123"
+            },
+            status=status.HTTP_200_OK
+        )
+
+
+# ======================================
+# 🤖 REAL AI CHAT WITH OPENAI
+# ======================================
+class ChatAPIView(APIView):
+
+    def post(self, request):
+
+        user_message = request.data.get("message", "")
+        topic = request.data.get("topic", "greetings")
+
+        if not user_message:
+            return Response(
+                {"error": "Message required"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            prompt = f"""
+            You are Anvi, a friendly English teacher.
+
+            Teach beginner students spoken English.
+
+            Topic: {topic}
+
+            Student said: {user_message}
+
+            Rules:
+            1. Reply like teacher, not chatbot.
+            2. Correct grammar if needed.
+            3. Teach something useful.
+            4. Keep answer short and simple.
+            5. Encourage practice.
+            """
+
+            response = client.chat.completions.create(
+                model="gpt-4o-mini",
+                messages=[
+                    {
+                        "role": "user",
+                        "content": prompt
+                    }
+                ]
+            )
+
+            ai_reply = response.choices[0].message.content
+
+            return Response(
+                {"reply": ai_reply},
+                status=status.HTTP_200_OK
+            )
+
+        except Exception as e:
+            return Response(
+                {"error": str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+class LessonChatAPIView(APIView):
+
+    def post(self, request):
+
+        day = request.data.get("day")
+        step = request.data.get("step")
+        message = request.data.get("message", "").strip()
+
+        # Basic validation
+        if not day or step is None:
+            return Response(
+                {"error": "day and step required"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # 🎯 Day 1 logic (test version)
+        if day == 1:
+
+            # 🔹 Step 1 → Intro
+            if step == 1:
+                return Response({
+                    "next_step": 2,
+                    "reply": "Hi, I am Anvi. Say: I am ___"
+                })
+
+            # 🔹 Step 2 → After name
+            elif step == 2:
+                return Response({
+                    "next_step": 3,
+                    "reply": "Good job! Now say: I am from ___"
+                })
+
+            # 🔹 Step 3 → Final
+            elif step == 3:
+                return Response({
+                    "next_step": 0,
+                    "reply": "Great! You introduced yourself.",
+                    "completed": True
+                })
+
+        # ❌ Invalid case
+        return Response(
+            {"error": "Invalid day or step"},
+            status=status.HTTP_400_BAD_REQUEST
+        )
