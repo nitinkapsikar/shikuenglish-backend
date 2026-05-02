@@ -178,13 +178,13 @@ class LessonChatAPIView(APIView):
             if step == 1:
                 return Response({
                     "next_step": 2,
-                    "reply": "Hi, I am Anvi. Say: I am ___"
+                    "reply": "Hi, I am Anvi. Tell me your Name"
                 })
 
             elif step == 2:
                 return Response({
                     "next_step": 3,
-                    "reply": "Good job! Now say: I am from ___"
+                    "reply": "Good job! tell me are you from..."
                 })
 
             elif step == 3:
