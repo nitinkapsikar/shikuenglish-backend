@@ -19,7 +19,7 @@ client = OpenAI(api_key=settings.OPENAI_API_KEY)
 
 
 # ======================================
-# 📱 SEND OTP
+# 📱 SEND OTP (FAKE OTP MODE)
 # ======================================
 class SendOTPView(APIView):
 
@@ -47,7 +47,10 @@ class SendOTPView(APIView):
         print(f"OTP for {phone}: {otp}")
 
         return Response(
-            {"message": "OTP sent successfully"},
+            {
+                "message": "OTP sent successfully",
+                "otp": otp   # 🔥 IMPORTANT (fake OTP for testing)
+            },
             status=status.HTTP_200_OK
         )
 
@@ -103,7 +106,7 @@ class VerifyOTPView(APIView):
 
 
 # ======================================
-# 🤖 REAL AI CHAT WITH OPENAI
+# 🤖 REAL AI CHAT
 # ======================================
 class ChatAPIView(APIView):
 
@@ -129,21 +132,14 @@ class ChatAPIView(APIView):
             Student said: {user_message}
 
             Rules:
-            1. Reply like teacher, not chatbot.
-            2. Correct grammar if needed.
-            3. Teach something useful.
-            4. Keep answer short and simple.
-            5. Encourage practice.
+            1. Reply like teacher
+            2. Correct grammar
+            3. Keep short
             """
 
             response = client.chat.completions.create(
                 model="gpt-4o-mini",
-                messages=[
-                    {
-                        "role": "user",
-                        "content": prompt
-                    }
-                ]
+                messages=[{"role": "user", "content": prompt}]
             )
 
             ai_reply = response.choices[0].message.content
@@ -158,6 +154,11 @@ class ChatAPIView(APIView):
                 {"error": str(e)},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
+
+
+# ======================================
+# 🎯 LESSON CHAT
+# ======================================
 class LessonChatAPIView(APIView):
 
     def post(self, request):
@@ -166,31 +167,26 @@ class LessonChatAPIView(APIView):
         step = request.data.get("step")
         message = request.data.get("message", "").strip()
 
-        # Basic validation
         if not day or step is None:
             return Response(
                 {"error": "day and step required"},
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        # 🎯 Day 1 logic (test version)
         if day == 1:
 
-            # 🔹 Step 1 → Intro
             if step == 1:
                 return Response({
                     "next_step": 2,
                     "reply": "Hi, I am Anvi. Say: I am ___"
                 })
 
-            # 🔹 Step 2 → After name
             elif step == 2:
                 return Response({
                     "next_step": 3,
                     "reply": "Good job! Now say: I am from ___"
                 })
 
-            # 🔹 Step 3 → Final
             elif step == 3:
                 return Response({
                     "next_step": 0,
@@ -198,7 +194,6 @@ class LessonChatAPIView(APIView):
                     "completed": True
                 })
 
-        # ❌ Invalid case
         return Response(
             {"error": "Invalid day or step"},
             status=status.HTTP_400_BAD_REQUEST
