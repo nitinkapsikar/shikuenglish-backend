@@ -2,9 +2,12 @@ import random
 from django.utils import timezone
 from django.conf import settings
 
+
+
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
+from .models import Lesson
 
 from openai import OpenAI
 
@@ -178,7 +181,7 @@ class LessonChatAPIView(APIView):
             if step == 1:
                 return Response({
                     "next_step": 2,
-                    "reply": "Hi, I am Anvi. Tell me your Name"
+                    "reply": "Hi, I am Anvi. What is your name?"
                 })
 
             elif step == 2:
@@ -198,3 +201,23 @@ class LessonChatAPIView(APIView):
             {"error": "Invalid day or step"},
             status=status.HTTP_400_BAD_REQUEST
         )
+
+class LessonAPIView(APIView):
+
+    def post(self, request):
+        day = request.data.get("day")
+        step = request.data.get("step")
+
+        try:
+            lesson = Lesson.objects.get(day=day, step=step)
+
+            return Response({
+                "message": lesson.message,
+                "next_step": lesson.next_step
+            })
+
+        except Lesson.DoesNotExist:
+            return Response(
+                {"error": "Lesson not found"},
+                status=status.HTTP_404_NOT_FOUND
+            )

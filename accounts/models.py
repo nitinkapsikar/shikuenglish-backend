@@ -13,3 +13,16 @@ class OTP(models.Model):
 
     def __str__(self):
         return f"{self.phone} - {self.otp}"
+
+
+class Lesson(models.Model):
+    day = models.IntegerField()
+    step = models.IntegerField()
+
+    message = models.TextField()  # AI बोलणार
+    expected_input = models.TextField(null=True, blank=True)  # optional
+
+    next_step = models.IntegerField()
+
+    def __str__(self):
+        return f"Day {self.day} - Step {self.step}"
