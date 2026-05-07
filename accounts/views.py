@@ -169,12 +169,6 @@ class LessonChatAPIView(APIView):
         day = request.data.get("day")
         step = request.data.get("step")
 
-        if not day or step is None:
-            return Response(
-                {"error": "day and step required"},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-
         try:
 
             lesson = Lesson.objects.get(
@@ -182,24 +176,10 @@ class LessonChatAPIView(APIView):
                 step=step
             )
 
-            # lesson completed
-            if lesson.next_step == 0:
-                return Response({
-                    "reply": lesson.message,
-                    "next_step": 0,
-                    "completed": True
-                })
-
-            # fetch next lesson
-            next_lesson = Lesson.objects.get(
-                day=day,
-                step=lesson.next_step
-            )
-
             return Response({
-                "reply": next_lesson.message,
-                "next_step": next_lesson.step,
-                "completed": False
+                "reply": lesson.message,
+                "next_step": lesson.next_step,
+                "completed": lesson.next_step == 0
             })
 
         except Lesson.DoesNotExist:
