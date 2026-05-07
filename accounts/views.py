@@ -168,7 +168,6 @@ class LessonChatAPIView(APIView):
 
         day = request.data.get("day")
         step = request.data.get("step")
-        message = request.data.get("message", "").strip()
 
         if not day or step is None:
             return Response(
@@ -176,32 +175,38 @@ class LessonChatAPIView(APIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        if day == 1:
+        try:
 
-            if step == 1:
-                return Response({
-                    "next_step": 2,
-                    "reply": "Hi, I am Anvi. What is your name?"
-                })
+            lesson = Lesson.objects.get(
+                day=day,
+                step=step
+            )
 
-            elif step == 2:
+            # lesson completed
+            if lesson.next_step == 0:
                 return Response({
-                    "next_step": 3,
-                    "reply": "Good job! tell me are you from..."
-                })
-
-            elif step == 3:
-                return Response({
+                    "reply": lesson.message,
                     "next_step": 0,
-                    "reply": "Great! You introduced yourself.",
                     "completed": True
                 })
 
-        return Response(
-            {"error": "Invalid day or step"},
-            status=status.HTTP_400_BAD_REQUEST
-        )
+            # fetch next lesson
+            next_lesson = Lesson.objects.get(
+                day=day,
+                step=lesson.next_step
+            )
 
+            return Response({
+                "reply": next_lesson.message,
+                "next_step": next_lesson.step,
+                "completed": False
+            })
+
+        except Lesson.DoesNotExist:
+            return Response(
+                {"error": "Lesson not found"},
+                status=status.HTTP_404_NOT_FOUND
+            )
 class LessonAPIView(APIView):
 
     def post(self, request):
