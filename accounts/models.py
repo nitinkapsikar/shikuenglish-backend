@@ -19,10 +19,20 @@ class Lesson(models.Model):
     day = models.IntegerField()
     step = models.IntegerField()
 
-    message = models.TextField()  # AI बोलणार
-    expected_input = models.TextField(null=True, blank=True)  # optional
+    # Bot message
+    message = models.TextField()
 
+    # Expected user response hint
+    expected_input = models.TextField(
+        null=True,
+        blank=True
+    )
+
+    # Next step number
     next_step = models.IntegerField()
+
+    # Detect last lesson step
+    is_last_step = models.BooleanField(default=False)
 
     def __str__(self):
         return f"Day {self.day} - Step {self.step}"
