@@ -190,18 +190,100 @@ class LessonChatAPIView(APIView):
 class LessonAPIView(APIView):
 
     def post(self, request):
+
         day = request.data.get("day")
         step = request.data.get("step")
+        user_message = request.data.get("message", "").strip()
 
         try:
-            lesson = Lesson.objects.get(day=day, step=step)
 
-            return Response({
-                "message": lesson.message,
-                "next_step": lesson.next_step
-            })
+            lesson = Lesson.objects.get(
+                day=day,
+                step=step
+            )
+
+            expected = lesson.expected_input.lower().strip()
+
+            # FIRST STEP
+            # only show question
+            if user_message == "":
+
+                return Response({
+                    "reply": lesson.message,
+                    "next_step": step,
+                    "completed": False
+                })
+
+            # CORRECT ANSWER
+            if expected in user_message.lower():
+
+                # lesson completed
+                if lesson.next_step == 0:
+
+                    return Response({
+                        "reply": lesson.message,
+                        "next_step": 0,
+                        "completed": True,
+                        "correct": True
+                    })
+
+                # move next lesson
+                next_lesson = Lesson.objects.get(
+                    day=day,
+                    step=lesson.next_step
+                )
+
+                return Response({
+                    "reply": next_lesson.message,
+                    "next_step": next_lesson.step,
+                    "completed": False,
+                    "correct": True
+                })
+
+            # WRONG ANSWER → AI CORRECTION
+            else:
+
+                prompt = f"""
+                You are a friendly English teacher.
+
+                Student question:
+                {lesson.message}
+
+                Expected answer:
+                {lesson.expected_input}
+
+                Student answered:
+                {user_message}
+
+                Rules:
+                1. Correct politely
+                2. Keep response short
+                3. Explain simply
+                4. Ask student to try again
+                """
+
+                response = client.chat.completions.create(
+                    model="gpt-4o-mini",
+
+                    messages=[
+                        {
+                            "role": "user",
+                            "content": prompt
+                        }
+                    ]
+                )
+
+                ai_reply = response.choices[0].message.content
+
+                return Response({
+                    "reply": ai_reply,
+                    "next_step": step,
+                    "completed": False,
+                    "correct": False
+                })
 
         except Lesson.DoesNotExist:
+
             return Response(
                 {"error": "Lesson not found"},
                 status=status.HTTP_404_NOT_FOUND
