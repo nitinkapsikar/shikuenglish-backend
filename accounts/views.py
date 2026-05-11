@@ -206,8 +206,7 @@ class LessonAPIView(APIView):
                     lesson.expected_input or ""
             ).lower().strip()
 
-            # FIRST STEP
-            # only show question
+            # FIRST MESSAGE
             if user_message == "":
 
                 return Response({
@@ -219,7 +218,7 @@ class LessonAPIView(APIView):
             # CORRECT ANSWER
             if expected in user_message.lower():
 
-                # lesson completed
+                # LESSON COMPLETED
                 if lesson.next_step == 0:
 
                     return Response({
@@ -229,7 +228,7 @@ class LessonAPIView(APIView):
                         "correct": True
                     })
 
-                # move next lesson
+                # NEXT LESSON
                 next_lesson = Lesson.objects.get(
                     day=day,
                     step=lesson.next_step
@@ -294,6 +293,6 @@ class LessonAPIView(APIView):
         except Exception as e:
 
             return Response(
-            {"error": str(e)},
+                {"error": str(e)},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
-    )
+            )
