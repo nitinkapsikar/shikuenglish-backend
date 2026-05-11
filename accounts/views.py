@@ -202,7 +202,9 @@ class LessonAPIView(APIView):
                 step=step
             )
 
-            expected = lesson.expected_input.lower().strip()
+            expected = (
+                    lesson.expected_input or ""
+            ).lower().strip()
 
             # FIRST STEP
             # only show question
