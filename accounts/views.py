@@ -206,42 +206,42 @@ class LessonAPIView(APIView):
                     lesson.expected_input or ""
             ).lower().strip()
 
-            # FIRST MESSAGE
+            # 🔥 FIRST MESSAGE
             if user_message == "":
 
                 return Response({
-                    "reply": lesson.message,
+                    "message": lesson.message,
                     "next_step": step,
                     "completed": False
                 })
 
-            # CORRECT ANSWER
+            # 🔥 CORRECT ANSWER
             if expected in user_message.lower():
 
-                # LESSON COMPLETED
+                # 🔥 LESSON COMPLETED
                 if lesson.next_step == 0:
 
                     return Response({
-                        "reply": lesson.message,
+                        "message": lesson.message,
                         "next_step": 0,
                         "completed": True,
                         "correct": True
                     })
 
-                # NEXT LESSON
+                # 🔥 NEXT LESSON
                 next_lesson = Lesson.objects.get(
                     day=day,
                     step=lesson.next_step
                 )
 
                 return Response({
-                    "reply": next_lesson.message,
+                    "message": next_lesson.message,
                     "next_step": next_lesson.step,
                     "completed": False,
                     "correct": True
                 })
 
-            # WRONG ANSWER → AI CORRECTION
+            # 🔥 WRONG ANSWER → AI CORRECTION
             else:
 
                 prompt = f"""
@@ -277,7 +277,7 @@ class LessonAPIView(APIView):
                 ai_reply = response.choices[0].message.content
 
                 return Response({
-                    "reply": ai_reply,
+                    "message": ai_reply,
                     "next_step": step,
                     "completed": False,
                     "correct": False
