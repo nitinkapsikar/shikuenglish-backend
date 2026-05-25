@@ -36,3 +36,20 @@ class Lesson(models.Model):
 
     def __str__(self):
         return f"Day {self.day} - Step {self.step}"
+
+
+class UserProgress(models.Model):
+
+    phone = models.CharField(max_length=15)
+
+    completed_day = models.IntegerField(default=0)
+
+    unlocked_day = models.IntegerField(default=1)
+
+    current_step = models.IntegerField(default=1)
+
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+
+        return self.phone

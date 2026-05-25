@@ -7,7 +7,7 @@ from django.conf import settings
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from .models import Lesson
+from .models import Lesson, UserProgress
 
 from openai import OpenAI
 
@@ -193,6 +193,7 @@ class LessonAPIView(APIView):
 
         day = request.data.get("day")
         step = request.data.get("step")
+        phone = request.data.get("phone")
         user_message = request.data.get("message", "").strip()
 
         try:
@@ -220,6 +221,16 @@ class LessonAPIView(APIView):
 
                 # 🔥 LESSON COMPLETED
                 if lesson.next_step == 0:
+
+                    progress, created = UserProgress.objects.get_or_create(
+                        phone=phone
+                    )
+
+                    progress.completed_day = day
+                    progress.unlocked_day = day + 1
+                    progress.current_step = 1
+
+                    progress.save()
 
                     return Response({
                         "message": lesson.message,
