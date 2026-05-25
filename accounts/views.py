@@ -307,3 +307,37 @@ class LessonAPIView(APIView):
                 {"error": str(e)},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
+class UserProgressAPIView(APIView):
+
+    def post(self, request):
+
+        phone = request.data.get("phone")
+
+        try:
+
+            progress = UserProgress.objects.get(
+                phone=phone
+            )
+
+            return Response({
+
+                "completed_day":
+                    progress.completed_day,
+
+                "unlocked_day":
+                    progress.unlocked_day,
+
+                "current_step":
+                    progress.current_step
+            })
+
+        except UserProgress.DoesNotExist:
+
+            return Response({
+
+                "completed_day": 0,
+
+                "unlocked_day": 1,
+
+                "current_step": 1
+            })
