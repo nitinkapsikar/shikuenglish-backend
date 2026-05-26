@@ -28,6 +28,11 @@ class Lesson(models.Model):
         blank=True
     )
 
+    validation_type = models.CharField(
+        max_length=50,
+        default="contains"
+    )
+
     # Next step number
     next_step = models.IntegerField()
 
