@@ -54,6 +54,9 @@ class UserProgress(models.Model):
     current_step = models.IntegerField(default=1)
 
     updated_at = models.DateTimeField(auto_now=True)
+    is_premium = models.BooleanField(
+        default=False
+    )
 
     def __str__(self):
 

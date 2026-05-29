@@ -1,5 +1,6 @@
 from django.urls import path
-from .views import SendOTPView, VerifyOTPView, ChatAPIView,LessonChatAPIView,LessonAPIView,UserProgressAPIView
+from .views import (SendOTPView, VerifyOTPView, ChatAPIView,
+                    LessonChatAPIView,LessonAPIView,UserProgressAPIView,ActivatePremiumAPIView)
 
 urlpatterns = [
     path('send-otp/', SendOTPView.as_view(), name="send-otp"),
@@ -11,5 +12,10 @@ urlpatterns = [
         "progress/",
         UserProgressAPIView.as_view()
     ),
+
+    path(
+        "activate-premium/",
+        ActivatePremiumAPIView.as_view()
+    )
 
 ]

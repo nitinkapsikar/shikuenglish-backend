@@ -341,3 +341,21 @@ class UserProgressAPIView(APIView):
 
                 "current_step": 1
             })
+
+class ActivatePremiumAPIView(APIView):
+
+    def post(self, request):
+
+        phone = request.data.get("phone")
+
+        progress = UserProgress.objects.get(
+            phone=phone
+        )
+
+        progress.is_premium = True
+
+        progress.save()
+
+        return Response({
+            "success": True
+        })
