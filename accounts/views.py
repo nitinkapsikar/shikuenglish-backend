@@ -328,7 +328,10 @@ class UserProgressAPIView(APIView):
                     progress.unlocked_day,
 
                 "current_step":
-                    progress.current_step
+                    progress.current_step,
+
+                "is_premium":
+                    progress.is_premium
             })
 
         except UserProgress.DoesNotExist:
