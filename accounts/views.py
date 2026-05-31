@@ -162,32 +162,8 @@ class ChatAPIView(APIView):
 # ======================================
 # 🎯 LESSON CHAT
 # ======================================
-class LessonChatAPIView(APIView):
-
-    def post(self, request):
-
-        day = request.data.get("day")
-        step = request.data.get("step")
-
-        try:
-
-            lesson = Lesson.objects.get(
-                day=day,
-                step=step
-            )
-
-            return Response({
-                "reply": lesson.message,
-                "next_step": lesson.next_step,
-                "completed": lesson.next_step == 0
-            })
-
-        except Lesson.DoesNotExist:
-            return Response(
-                {"error": "Lesson not found"},
-                status=status.HTTP_404_NOT_FOUND
-            )
 class LessonAPIView(APIView):
+
 
     def post(self, request):
 
@@ -207,6 +183,8 @@ class LessonAPIView(APIView):
                     lesson.expected_input or ""
             ).lower().strip()
 
+            user_input = user_message.lower().strip()
+
             # 🔥 FIRST MESSAGE
             if user_message == "":
 
@@ -216,8 +194,36 @@ class LessonAPIView(APIView):
                     "completed": False
                 })
 
+            # 🔥 VALIDATION
+            is_correct = False
+
+            # exact
+            if lesson.validation_type == "exact":
+
+                is_correct = (
+                        user_input == expected
+                )
+
+            # contains
+            elif lesson.validation_type == "contains":
+
+                is_correct = (
+                        expected in user_input
+                )
+
+            # starts_with
+            elif lesson.validation_type == "starts_with":
+
+                if user_input.startswith(expected):
+
+                    words = user_input.split()
+
+                    if len(words) >= lesson.min_words:
+
+                        is_correct = True
+
             # 🔥 CORRECT ANSWER
-            if expected in user_message.lower():
+            if is_correct:
 
                 # 🔥 LESSON COMPLETED
                 if lesson.next_step == 0:
@@ -239,7 +245,7 @@ class LessonAPIView(APIView):
                         "correct": True
                     })
 
-                # 🔥 NEXT LESSON
+                # 🔥 NEXT STEP
                 next_lesson = Lesson.objects.get(
                     day=day,
                     step=lesson.next_step
@@ -257,16 +263,16 @@ class LessonAPIView(APIView):
 
                 prompt = f"""
                 You are a friendly English teacher.
-
+    
                 Student question:
                 {lesson.message}
-
+    
                 Expected answer:
                 {lesson.expected_input}
-
+    
                 Student answered:
                 {user_message}
-
+    
                 Rules:
                 1. Correct politely
                 2. Keep response short
@@ -276,7 +282,6 @@ class LessonAPIView(APIView):
 
                 response = client.chat.completions.create(
                     model="gpt-4o-mini",
-
                     messages=[
                         {
                             "role": "user",
@@ -307,6 +312,9 @@ class LessonAPIView(APIView):
                 {"error": str(e)},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
+
+
+
 class UserProgressAPIView(APIView):
 
     def post(self, request):
