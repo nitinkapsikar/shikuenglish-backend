@@ -33,6 +33,11 @@ class Lesson(models.Model):
         default="contains"
     )
 
+
+    min_words = models.IntegerField(
+        default=0
+    )
+
     # Next step number
     next_step = models.IntegerField()
 
