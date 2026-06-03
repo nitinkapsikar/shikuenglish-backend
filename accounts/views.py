@@ -169,7 +169,7 @@ class LessonAPIView(APIView):
 
         day = request.data.get("day")
         step = request.data.get("step")
-        phone = request.data.get("phone")
+        email = request.data.get("email")
         user_message = request.data.get("message", "").strip()
 
         try:
@@ -229,7 +229,7 @@ class LessonAPIView(APIView):
                 if lesson.next_step == 0:
 
                     progress, created = UserProgress.objects.get_or_create(
-                        phone=phone
+                        email= email
                     )
 
                     progress.completed_day = day
@@ -319,12 +319,12 @@ class UserProgressAPIView(APIView):
 
     def post(self, request):
 
-        phone = request.data.get("phone")
+        email= request.data.get("email")
 
         try:
 
             progress = UserProgress.objects.get(
-                phone=phone
+                email=email
             )
 
             return Response({
@@ -357,10 +357,10 @@ class ActivatePremiumAPIView(APIView):
 
     def post(self, request):
 
-        phone = request.data.get("phone")
+        email = request.data.get("email")
 
         progress = UserProgress.objects.get(
-            phone=phone
+          email=email
         )
 
         progress.is_premium = True
@@ -369,4 +369,40 @@ class ActivatePremiumAPIView(APIView):
 
         return Response({
             "success": True
+        })
+
+class GoogleLoginAPIView(APIView):
+
+    def post(self, request):
+
+        email = request.data.get("email")
+        name = request.data.get("name")
+
+        if not email:
+
+            return Response(
+                {"error": "Email required"},
+                status=400
+            )
+
+        progress, created = UserProgress.objects.get_or_create(
+            email=email,
+            defaults={
+                "name": name
+            }
+        )
+
+        if not created and name:
+
+            progress.name = name
+            progress.save()
+
+        return Response({
+            "success": True,
+            "email": progress.email,
+            "name": progress.name,
+            "completed_day": progress.completed_day,
+            "unlocked_day": progress.unlocked_day,
+            "current_step": progress.current_step,
+            "is_premium": progress.is_premium
         })

@@ -1,6 +1,6 @@
 from django.urls import path
 from .views import (SendOTPView, VerifyOTPView, ChatAPIView,
-                    LessonAPIView,UserProgressAPIView,ActivatePremiumAPIView)
+                    LessonAPIView,UserProgressAPIView,ActivatePremiumAPIView,GoogleLoginAPIView)
 
 urlpatterns = [
     path('send-otp/', SendOTPView.as_view(), name="send-otp"),
@@ -16,6 +16,11 @@ urlpatterns = [
     path(
         "activate-premium/",
         ActivatePremiumAPIView.as_view()
-    )
+    ),
+
+    path(
+        "google-login/",
+        GoogleLoginAPIView.as_view()
+    ),
 
 ]

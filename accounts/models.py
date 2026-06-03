@@ -47,10 +47,18 @@ class Lesson(models.Model):
     def __str__(self):
         return f"Day {self.day} - Step {self.step}"
 
-
 class UserProgress(models.Model):
 
-    phone = models.CharField(max_length=15)
+    email = models.EmailField(
+        unique=True,
+        null=True,
+        blank=True
+    )
+
+    name = models.CharField(
+        max_length=100,
+        blank=True
+    )
 
     completed_day = models.IntegerField(default=0)
 
@@ -58,11 +66,10 @@ class UserProgress(models.Model):
 
     current_step = models.IntegerField(default=1)
 
+    is_premium = models.BooleanField(default=False)
+
     updated_at = models.DateTimeField(auto_now=True)
-    is_premium = models.BooleanField(
-        default=False
-    )
 
     def __str__(self):
+        return self.email
 
-        return self.phone
