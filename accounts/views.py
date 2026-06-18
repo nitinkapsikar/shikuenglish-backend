@@ -174,20 +174,34 @@ class LessonAPIView(APIView):
         email = request.data.get("email")
         user_message = request.data.get("message", "").strip()
 
+
         language = request.data.get(
             "language",
             "english"
         )
 
+
         try:
+
+
 
             lesson = Lesson.objects.get(
                 day=day,
                 step=step
             )
 
+            if language == "marathi":
+                lesson_message = (
+                        lesson.message_marathi
+                        or lesson.message
+                )
+            else:
+                lesson_message = lesson.message
+
+
+
             expected = (
-                    lesson.expected_input or ""
+                lesson.expected_input or ""
             ).lower().strip()
 
             user_input = user_message.lower().strip()
@@ -196,7 +210,7 @@ class LessonAPIView(APIView):
             if user_message == "":
 
                 return Response({
-                    "message": lesson.message,
+                    "message": lesson_message,
                     "next_step": step,
                     "completed": False
                 })
@@ -246,7 +260,7 @@ class LessonAPIView(APIView):
                     progress.save()
 
                     return Response({
-                        "message": lesson.message,
+                        "message": lesson_message,
                         "next_step": 0,
                         "completed": True,
                         "correct": True
@@ -258,8 +272,14 @@ class LessonAPIView(APIView):
                     step=lesson.next_step
                 )
 
+                next_message = (
+                    next_lesson.message_marathi
+                    if language == "marathi" and next_lesson.message_marathi
+                    else next_lesson.message
+                )
+
                 return Response({
-                    "message": next_lesson.message,
+                    "message":  next_message,
                     "next_step": next_lesson.step,
                     "completed": False,
                     "correct": True
