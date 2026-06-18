@@ -165,12 +165,19 @@ class ChatAPIView(APIView):
 class LessonAPIView(APIView):
 
 
+
+
     def post(self, request):
 
         day = request.data.get("day")
         step = request.data.get("step")
         email = request.data.get("email")
         user_message = request.data.get("message", "").strip()
+
+        language = request.data.get(
+            "language",
+            "english"
+        )
 
         try:
 

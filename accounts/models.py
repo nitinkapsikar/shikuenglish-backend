@@ -28,6 +28,16 @@ class Lesson(models.Model):
         blank=True
     )
 
+    message_marathi = models.TextField(
+        null=True,
+        blank=True
+    )
+
+    expected_input = models.TextField(
+        null=True,
+        blank=True
+    )
+
     validation_type = models.CharField(
         max_length=50,
         default="contains"
